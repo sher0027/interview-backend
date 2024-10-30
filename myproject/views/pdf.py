@@ -46,7 +46,7 @@ class PDFUploadView(APIView):
             if 'error' not in parsed_data:
                 self.save_resume(parsed_data, uid)
 
-            return JsonResponse({"resume_info": parsed_data}, status=200)
+            return JsonResponse(parsed_data, status=200)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
