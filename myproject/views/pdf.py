@@ -29,7 +29,6 @@ class PDFUploadView(APIView):
 
         try:
             pdf_path = default_storage.save(f"pdfs/{pdf_file.name}", pdf_file)
-            print("Successfully upload file!")
             if not pdf_path:
                 return JsonResponse({"error": "Failed to save file to storage"}, status=500)
 
