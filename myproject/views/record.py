@@ -29,3 +29,26 @@ class RecordView(APIView):
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+
+    def update_reply(self, rid, reply_text):
+        try:
+            response = self.records_table.query(
+                KeyConditionExpression=Key('rid').eq(rid),
+                ProjectionExpression="seq",
+                ScanIndexForward=False,
+                Limit=1
+            )
+            if 'Items' not in response or not response['Items']:
+                return JsonResponse({"error": "No record found to update reply"}, status=404)
+
+            latest_seq = response['Items'][0]['seq']
+
+            self.records_table.update_item(
+                Key={'rid': rid, 'seq': latest_seq},
+                UpdateExpression="SET reply = :reply_text",
+                ExpressionAttributeValues={':reply_text': reply_text}
+            )
+
+            return JsonResponse({"message": "Reply updated successfully"}, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
