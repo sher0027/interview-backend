@@ -8,6 +8,8 @@ To start the backend:
 RUN IN DOCKER(recommand):
     run ./docker_run.sh
 
+Please rerun ./docker_run.sh after code modification.
+
 
 To connect to apis and AWS service:
     create .env in root, should be like:

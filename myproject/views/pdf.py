@@ -66,7 +66,7 @@ class PDFUploadView(APIView):
             {"role": "user", "content": (
                 f"Extract the following fields from the resume text:\n\n"
                 f"{text}\n\n"
-                "Return a JSON with these fields: name, email, phone, address, education(list of objects), workExperience(list of objects), skills."
+                "Return a JSON with these fields: name, email, phone, address, education(list of objects), workExperience(if any, list of objects), projects(if any, list of objects),skills."
                 " Respond only with JSON data without additional text."
             )}
         ]

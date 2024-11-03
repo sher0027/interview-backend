@@ -22,6 +22,7 @@ from myproject.views.audio import AudioUploadView
 from myproject.views.chat import ChatView
 from myproject.views.pdf import PDFUploadView
 from myproject.views.login import LoginView
+from myproject.views.record import RecordView
 from myproject.views.resume import ResumeView
 
 urlpatterns = [
@@ -31,6 +32,8 @@ urlpatterns = [
     path('api/upload_audio/', AudioUploadView.as_view(), name='upload_audio'),
     path('api/upload_pdf/', PDFUploadView.as_view(), name='upload_pdf'),
     path('api/send_chat_message/', ChatView.as_view(), name='send_chat_message'),
+    path('api/record/<str:rid>/', RecordView.as_view()), 
+    path('api/record/<str:rid>/<int:seq>/', RecordView.as_view()), 
 ]
 
 

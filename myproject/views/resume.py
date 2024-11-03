@@ -1,4 +1,3 @@
-import json
 from myproject.utils import get_dynamodb_table
 from rest_framework.views import APIView
 from django.http import JsonResponse
