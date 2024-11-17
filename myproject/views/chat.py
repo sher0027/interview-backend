@@ -3,14 +3,23 @@ from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser
 from myproject import settings
-from myproject.views import RecordView, ResumeView  
+from myproject.repositories.record import RecordRepository
+from myproject.repositories.user import UserRepository
 
-openai.api_key = settings.OPENAI_API_KEY 
+openai.api_key = settings.OPENAI_API_KEY
 
 class ChatView(APIView):
     parser_classes = [JSONParser]
 
-    def post(self, request, *args, **kwargs):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.record_repo = RecordRepository()
+        self.user_repo = UserRepository()
+
+    def post(self, request, version, *args, **kwargs):
+        """
+        Handle POST requests to generate interview responses.
+        """
         rid = request.data.get("rid")
         company_info = request.data.get("companyInfo")
 
@@ -18,32 +27,36 @@ class ChatView(APIView):
             return JsonResponse({"error": "Missing record ID or company information"}, status=400)
 
         try:
-            resume_view = ResumeView()
-            resume_response = resume_view.get(request)
-            if resume_response.status_code != 200:
-                return resume_response 
+            uid = str(request.user.id)
+            resume_info = self.user_repo.get_user(uid, version)
+            if not resume_info:
+                return JsonResponse({"error": "Resume not found for the user."}, status=404)
 
-            resume_info = resume_response
-            
-            record_view = RecordView()
-            records_response = record_view.get(request, rid)
-            if records_response.status_code != 200:
-                return records_response  
+            records = self.record_repo.get_all_records(rid)
+            if not records:
+                return JsonResponse({"error": "No records found for the given record ID"}, status=404)
 
             chat_history = []
-            for item in records_response.get('records', []):
-                chat_history.append({"role": "user", "content": item['transcript']})
-                if 'reply' in item and item['reply']:  
-                    chat_history.append({"role": "assistant", "content": item['reply']})
+            seq_to_update = None
+            for record in records:
+                chat_history.append({"role": "user", "content": record['transcript']})
+                if 'reply' in record and record['reply']:
+                    chat_history.append({"role": "assistant", "content": record['reply']})
+                else:
+                    seq_to_update = record['seq']
 
-            response_text = self.generate_interview_response(chat_history, resume_info, company_info)
-            self.save_reply(rid, response_text)
+            response_text = self._generate_interview_response(chat_history, resume_info, company_info)
+
+            self.record_repo.update_reply(rid, seq_to_update, response_text)
 
             return JsonResponse({"response": response_text}, status=200)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
-    def generate_interview_response(self, chat_history, resume_info, company_info):
+    def _generate_interview_response(self, chat_history, resume_info, company_info):
+        """
+        Generate an interview response using OpenAI's GPT model.
+        """
         company_name = company_info.get("name")
         role_name = company_info.get("role")
         job_description = company_info.get("description")
@@ -60,7 +73,7 @@ class ChatView(APIView):
                     "Begin with a general question such as 'Tell me about yourself', then proceed with questions one by one."
                 )
             },
-            *chat_history  
+            *chat_history
         ]
 
         response = openai.ChatCompletion.create(
@@ -69,7 +82,3 @@ class ChatView(APIView):
             max_tokens=100
         )
         return response['choices'][0]['message']['content']
-
-    def save_reply(self, rid, reply_text):
-        record_view = RecordView()
-        return record_view.update_reply(rid, reply_text) 

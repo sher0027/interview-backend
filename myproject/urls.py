@@ -18,22 +18,24 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from myproject.views.auth import AuthView
 from myproject.views.audio import AudioUploadView
 from myproject.views.chat import ChatView
 from myproject.views.pdf import PDFUploadView
-from myproject.views.login import LoginView
 from myproject.views.record import RecordView
 from myproject.views.resume import ResumeView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/resume/", ResumeView.as_view(), name="resume"),
-    path('api/login/', LoginView.as_view(), name='login'),
+    path('api/login/', AuthView.as_view(), name='login'),
+    path('api/register/', AuthView.as_view(), name='register'),
+    path("api/resume/", ResumeView.as_view(), name="list_resumes"),
+    path("api/resume/<int:version>/", ResumeView.as_view(), name="manage_resume"),
     path('api/upload_audio/', AudioUploadView.as_view(), name='upload_audio'),
     path('api/upload_pdf/', PDFUploadView.as_view(), name='upload_pdf'),
-    path('api/send_chat_message/', ChatView.as_view(), name='send_chat_message'),
-    path('api/record/<str:rid>/', RecordView.as_view()), 
-    path('api/record/<str:rid>/<int:seq>/', RecordView.as_view()), 
+    path('api/send_chat_message/<int:version>/', ChatView.as_view(), name='send_chat_message'),
+    path('api/record/<str:rid>/', RecordView.as_view(), name="list_records"), 
+    path('api/record/<str:rid>/<int:seq>/', RecordView.as_view(), name="manage_record"), 
 ]
 
 

@@ -1,54 +1,26 @@
-from myproject.utils import get_dynamodb_table
 from rest_framework.views import APIView
 from django.http import JsonResponse
-from boto3.dynamodb.conditions import Key
+from myproject.repositories.record import RecordRepository
 
 class RecordView(APIView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.records_table = get_dynamodb_table('records')  
+        self.repo = RecordRepository()
 
     def get(self, request, rid, seq=None, *args, **kwargs):
         try:
             if seq:
-                response = self.records_table.get_item(
-                    Key={'rid': rid, 'seq': int(seq)}
-                )
-                item = response.get('Item')
-                if not item:
+                record = self.repo.get_record(rid, seq)
+                if not record:
                     return JsonResponse({"error": "Record not found"}, status=404)
-                return JsonResponse(item, status=200)
+                return JsonResponse(record, status=200)
             else:
-                response = self.records_table.query(
-                    KeyConditionExpression=Key('rid').eq(rid)
-                )
-                items = response.get('Items', [])
-                if not items:
-                    return JsonResponse({"error": "No records found for the given rid"}, status=404)
-                return JsonResponse({"records": items}, status=200)
+                records = self.repo.get_all_records(rid)
+                if not records:
+                    return JsonResponse({"error": "No record found for the given rid"}, status=404)
+                return JsonResponse({"records": records}, status=200)
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-
-    def update_reply(self, rid, reply_text):
-        try:
-            response = self.records_table.query(
-                KeyConditionExpression=Key('rid').eq(rid),
-                ProjectionExpression="seq",
-                ScanIndexForward=False,
-                Limit=1
-            )
-            if 'Items' not in response or not response['Items']:
-                return JsonResponse({"error": "No record found to update reply"}, status=404)
-
-            latest_seq = response['Items'][0]['seq']
-
-            self.records_table.update_item(
-                Key={'rid': rid, 'seq': latest_seq},
-                UpdateExpression="SET reply = :reply_text",
-                ExpressionAttributeValues={':reply_text': reply_text}
-            )
-
-            return JsonResponse({"message": "Reply updated successfully"}, status=200)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+    
+   
