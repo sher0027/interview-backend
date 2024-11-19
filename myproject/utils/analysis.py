@@ -1,17 +1,18 @@
 import librosa
 import numpy as np
+from decimal import Decimal
 
 def intensity_calculation(y):
     reference_spl = 94
     rms = librosa.feature.rms(y=y)
     intensity = librosa.amplitude_to_db(rms, ref=np.max).mean()
     intensity += reference_spl
-    return round(intensity, 2)
+    return Decimal(str(round(intensity, 2)))  
 
 def pitch_calculation(y):
     f0, voiced_flag, voiced_probs = librosa.pyin(y, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'))
     f0_clean_mean = f0[~np.isnan(f0)].mean()
-    return round(f0_clean_mean, 2)
+    return Decimal(str(round(f0_clean_mean, 2))) 
 
 def pause_per_minute_calculation(y, sr, audio_duration_minutes):
     rms = librosa.feature.rms(y=y).flatten()
@@ -36,7 +37,7 @@ def pause_per_minute_calculation(y, sr, audio_duration_minutes):
     long_pauses = [pause for pause in pauses if pause[2] >= 1]
 
     return {
-        "short_pauses_per_minute": round(len(short_pauses) / audio_duration_minutes),
-        "medium_pauses_per_minute": round(len(medium_pauses) / audio_duration_minutes),
-        "long_pauses_per_minute": round(len(long_pauses) / audio_duration_minutes)
+        "short_pauses_per_minute": Decimal(str(round(len(short_pauses) / audio_duration_minutes))), 
+        "medium_pauses_per_minute": Decimal(str(round(len(medium_pauses) / audio_duration_minutes))), 
+        "long_pauses_per_minute": Decimal(str(round(len(long_pauses) / audio_duration_minutes))) 
     }

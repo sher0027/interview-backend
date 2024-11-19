@@ -1,9 +1,11 @@
 import os
+import boto3
 import tempfile
 import ffmpeg
 import pdfplumber
 import requests
 from io import BytesIO
+from urllib.parse import urlparse
 from django.core.files.storage import default_storage
 
 def convert_audio_to_wav(s3_audio_path, rid):
@@ -31,7 +33,6 @@ def convert_audio_to_wav(s3_audio_path, rid):
 
     return s3_wav_url
 
-
 def extract_text_from_pdf(s3_file_url):
     response = requests.get(s3_file_url)
     if response.status_code != 200:
@@ -42,3 +43,23 @@ def extract_text_from_pdf(s3_file_url):
         for page in pdf.pages:
             full_text += page.extract_text()
     return full_text
+
+def parse_s3_url(s3_url):
+        """
+        Parse S3 URL into bucket name and object key.
+        """
+        parsed_url = urlparse(s3_url)
+        bucket_name = parsed_url.netloc.split(".")[0]
+        object_key = parsed_url.path.lstrip("/")
+        return bucket_name, object_key
+
+def download_s3_file(bucket_name, object_key):
+    """
+    Download a file from S3 using Boto3.
+    """
+    try:
+        s3_client = boto3.client('s3') 
+        response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
+        return response['Body'].read()
+    except Exception as e:
+        raise Exception(f"Failed to download file from S3: {str(e)}")

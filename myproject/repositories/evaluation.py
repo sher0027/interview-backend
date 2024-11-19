@@ -19,14 +19,24 @@ class EvaluationRepository:
         response = self.table.query(KeyConditionExpression=Key('eid').eq(eid))
         return response.get('Items', [])
 
-    def save_evaluation(self, eid, seq, evaluation_result):
+    def save_acoustic_evaluation(self, eid, seq, acoustic_result):
         """
-        Save a new evaluation result into the 'evaluations' table.
+        Save the results of acoustic evaluation.
         """
-        self.table.put_item(Item={
-            'eid': eid,
-            'seq': seq,
-            'evaluation_result': evaluation_result
-        })
+        self.table.update_item(
+            Key={'eid': eid, 'seq': seq},
+            UpdateExpression="SET acoustic = :acoustic_result",
+            ExpressionAttributeValues={':acoustic_result': acoustic_result}
+        )
+
+    def save_content_evaluation(self, eid, seq, content_result):
+        """
+        Save the results of content evaluation.
+        """
+        self.table.update_item(
+            Key={'eid': eid, 'seq': seq},
+            UpdateExpression="SET content = :content_result",
+            ExpressionAttributeValues={':content_result': content_result}
+        )
 
    

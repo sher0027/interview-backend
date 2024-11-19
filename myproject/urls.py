@@ -24,6 +24,7 @@ from myproject.views.chat import ChatView
 from myproject.views.pdf import PDFUploadView
 from myproject.views.record import RecordView
 from myproject.views.resume import ResumeView
+from myproject.views.evaluation import EvaluationView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -36,6 +37,8 @@ urlpatterns = [
     path('api/send_chat_message/<int:version>/', ChatView.as_view(), name='send_chat_message'),
     path('api/record/<str:rid>/', RecordView.as_view(), name="list_records"), 
     path('api/record/<str:rid>/<int:seq>/', RecordView.as_view(), name="manage_record"), 
+    path('api/evaluation/<str:eid>/', EvaluationView.as_view(), name="list_evaluations"), 
+    path('api/evaluation/<str:eid>/<int:seq>/', EvaluationView.as_view(), name="manage_evaluation"),
 ]
 
 
