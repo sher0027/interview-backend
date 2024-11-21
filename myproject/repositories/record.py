@@ -47,7 +47,8 @@ class RecordRepository:
             'rid': rid,
             'seq': seq,
             'transcript': transcript,
-            's3_url': s3_url
+            's3_url': s3_url,
+            'status': "new"
         })
 
     def update_reply(self, rid, seq, reply_text):
@@ -59,3 +60,26 @@ class RecordRepository:
             UpdateExpression="SET reply = :reply_text",
             ExpressionAttributeValues={':reply_text': reply_text}
         )
+
+    def update_all_status(self, rid, status):
+        """
+        Update the status of all records for the given rid.
+        """
+        try:
+            records = self.get_all_records(rid)
+            if not records:
+                return 0
+
+            for record in records:
+                self.table.update_item(
+                    Key={"rid": rid, "seq": record["seq"]},
+                    UpdateExpression="SET #status = :status",
+                    ExpressionAttributeNames={"#status": "status"},
+                    ExpressionAttributeValues={":status": status},
+                )
+
+            return len(records)
+
+        except Exception as e:
+            print(f"Error updating record statuses: {e}")
+            raise

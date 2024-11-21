@@ -62,19 +62,24 @@ class ChatView(APIView):
         role_name = company_info.get("role")
         job_description = company_info.get("description")
 
-        system_message = (
-            f"You are an interviewer from {company_name}.\n"
-            f"A candidate is interviewing for the position of {role_name}.\n"
-            f"Job Description: {job_description}\n"
-            f"Resume: {resume_info}\n"
-            "Please ask relevant interview questions based on the candidate's resume and responses.\n"
-            "Begin with a general question such as 'Tell me about yourself', then proceed with questions one by one."
-        )
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    f"You are an interviewer from {company_name}.\n"
+                    f"A candidate is interviewing for the position of {role_name}.\n"
+                    f"Job Description: {job_description}\n"
+                    f"Resume: {resume_info}\n"
+                    "Please ask relevant interview questions based on the candidate's resume and responses.\n"
+                    "Begin with a general question such as 'Tell me about yourself', then proceed with questions one by one."
+                )
+            },
+            *chat_history
+        ]
 
-        response = get_openai_response(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            system_message=system_message,
-            user_messages=chat_history,
+            messages=messages,
             max_tokens=100
         )
         return response['choices'][0]['message']['content']

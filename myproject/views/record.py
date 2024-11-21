@@ -22,5 +22,25 @@ class RecordView(APIView):
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+        
+    def put(self, request, rid, seq=None, *args, **kwargs):
+        """
+        Update the status of all records for the given rid.
+        """
+        try:
+            data = request.data  
+            status = data.get("status")
+
+            if not status:
+                return JsonResponse({"error": "Missing status in request body"}, status=400)
+
+            updated_count = self.repo.update_all_status(rid, status)
+            if updated_count == 0:
+                return JsonResponse({"error": "No records found to update"}, status=404)
+
+            return JsonResponse({"message": f"Successfully updated {updated_count} records to '{status}'"}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
     
    

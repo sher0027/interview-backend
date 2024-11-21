@@ -1,10 +1,12 @@
 import os
 import boto3
+import json
 import tempfile
 import ffmpeg
 import pdfplumber
 import requests
 from io import BytesIO
+from decimal import Decimal
 from urllib.parse import urlparse
 from django.core.files.storage import default_storage
 
@@ -63,3 +65,27 @@ def download_s3_file(bucket_name, object_key):
         return response['Body'].read()
     except Exception as e:
         raise Exception(f"Failed to download file from S3: {str(e)}")
+    
+def convert_floats_to_decimals(data):
+    """
+    Recursively convert all float values in a dictionary or list to Decimal.
+    """
+    if isinstance(data, list):
+        return [convert_floats_to_decimals(item) for item in data]
+    elif isinstance(data, dict):
+        return {key: convert_floats_to_decimals(value) for key, value in data.items()}
+    elif isinstance(data, float): 
+        return Decimal(str(data))
+    else:
+        return data
+
+
+def parse_gpt_response(response):
+    """
+    Parse GPT response safely and handle invalid JSON.
+    """
+    try:
+        return json.loads(response)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON from GPT response: {response}")
+        raise ValueError(f"Invalid JSON format: {str(e)}")
