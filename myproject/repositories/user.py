@@ -73,16 +73,16 @@ class UserRepository:
             response = self.table.get_item(Key={'uid': uid, 'version': int(version)})
             if 'Item' not in response:
                 raise ValueError(f"No resume found for uid={uid}, version={version}")
-            
-            restricted_fields = {"username", "password"}
+
+            restricted_fields = {"username", "password", "uid", "version"} 
             filtered_data = {key: value for key, value in updated_data.items() if key not in restricted_fields}
 
             if not filtered_data:
                 raise ValueError("No updatable fields provided.")
 
-            expression_attribute_names = {f"#{key}": key for key in updated_data.keys()}
-            expression_attribute_values = {f":{key}": value for key, value in updated_data.items()}
-            update_expression = "SET " + ", ".join([f"#{key} = :{key}" for key in updated_data.keys()])
+            expression_attribute_names = {f"#{key}": key for key in filtered_data.keys()}
+            expression_attribute_values = {f":{key}": value for key, value in filtered_data.items()}
+            update_expression = "SET " + ", ".join([f"#{key} = :{key}" for key in filtered_data.keys()])
 
             self.table.update_item(
                 Key={'uid': uid, 'version': int(version)},

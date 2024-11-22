@@ -19,6 +19,20 @@ class RecordRepository:
         response = self.table.query(KeyConditionExpression=Key('rid').eq(rid))
         return response.get('Items', [])
     
+    def create_new_rid(self, uid):
+        """
+        Generate a new rid for a given user by checking existing records.
+        """
+        table = get_dynamodb_table()
+        response = table.scan(
+            FilterExpression=Key("uid").eq(uid),
+            ProjectionExpression="rid",
+        )
+        existing_rids = [int(item["rid"]) for item in response.get("Items", [])]
+        new_rid = max(existing_rids) + 1 if existing_rids else 1
+        return str(new_rid)
+
+    
     def get_next_sequence(self, rid):
         """
         Retrieve the next available sequence number for a given record ID (rid).

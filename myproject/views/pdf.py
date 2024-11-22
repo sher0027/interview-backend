@@ -1,6 +1,5 @@
 import re
 import json
-from myproject.utils.format import extract_text_from_pdf
 import openai
 from myproject import settings
 from django.core.files.storage import default_storage
@@ -8,6 +7,7 @@ from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from myproject.repositories.user import UserRepository
+from myproject.utils.format import extract_text_from_pdf
 from datetime import datetime
 
 openai.api_key = settings.OPENAI_API_KEY 

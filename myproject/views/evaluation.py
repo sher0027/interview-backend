@@ -5,7 +5,7 @@ import soundfile as sf
 import librosa
 from io import BytesIO
 from django.http import JsonResponse
-from myproject.utils.analysis import intensity_calculation, pause_per_minute_calculation, pitch_calculation
+from myproject.utils.analysis import intensity_calculation, pause_per_minute_calculation, pitch_calculation, speech_rate_calculation
 from rest_framework.views import APIView
 from myproject.repositories.record import RecordRepository
 from myproject.repositories.evaluation import EvaluationRepository
@@ -52,9 +52,11 @@ class EvaluationView(APIView):
                 if seq == 1:
                     question = "Hello! How can I help you today?"
                 else:
-                    question = records[index - 1].get("transcript", "No question available")
+                    question = records[index - 1].get("reply", "No question available")
 
-                transcript = record.get("transcript", "No reply available")
+                transcript = record.get("transcript", "No answer available")
+
+                self.eval_repo.save_question_answer(eid, seq, question, transcript)
 
                 questions.append(question)
                 answers.append(transcript)
@@ -91,11 +93,13 @@ class EvaluationView(APIView):
             audio_duration_minutes = librosa.get_duration(y=audio_array, sr=sample_rate) / 60
 
             intensity = intensity_calculation(audio_array)
+            speech_rate = speech_rate_calculation(audio_array, sample_rate)
             pitch = pitch_calculation(audio_array)
             pauses = pause_per_minute_calculation(audio_array, sample_rate, audio_duration_minutes)
 
             evaluation_result = {
                 "intensity": intensity,
+                "speech_rate": speech_rate,
                 "pitch": pitch,
                 "pauses": pauses
             }
@@ -152,7 +156,7 @@ class EvaluationView(APIView):
                 "instructions": (
                     "Analyze the following acoustic data and provide the following:\n"
                     "1. A comprehensive score (0-10).\n"
-                    "2. Dimension-specific analysis for 'Loudness Consistency', 'Pitch Range', "
+                    "2. Dimension-specific analysis for 'Loudness Consistency', 'Speech Rate' 'Pitch Range', "
                     "'Pause Distribution', each with a score (0-10) and feedback.\n"
                     "3. A detailed summary with actionable recommendations."
                 )

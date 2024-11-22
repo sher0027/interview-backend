@@ -10,9 +10,18 @@ def intensity_calculation(y):
     return Decimal(str(round(intensity, 2)))  
 
 def pitch_calculation(y):
-    f0, voiced_flag, voiced_probs = librosa.pyin(y, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'))
+    f0, _, _ = librosa.pyin(y, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'))
     f0_clean_mean = f0[~np.isnan(f0)].mean()
     return Decimal(str(round(f0_clean_mean, 2))) 
+
+def speech_rate_calculation(y, sr):
+    onset_env = librosa.onset.onset_strength(y=y, sr=sr)
+    onset_frames = librosa.onset.onset_detect(onset_envelope=onset_env, sr=sr)
+    syllables_per_second = len(onset_frames) / librosa.get_duration(y=y, sr=sr)
+
+    syllables_per_word = 1.5  
+    words_per_minute = syllables_per_second * 60 / syllables_per_word
+    return Decimal(str(round(words_per_minute, 2)))
 
 def pause_per_minute_calculation(y, sr, audio_duration_minutes):
     rms = librosa.feature.rms(y=y).flatten()
